@@ -3,6 +3,8 @@ from src.network_utilities.gradient_value import GradientValue
 
 class Node(GradientValue):
     def __init__(self):
+        super().__init__()
+
         self.__state = 0
         self.__raw_state = 0
 
@@ -52,5 +54,5 @@ class Node(GradientValue):
         return self.__bias
 
     def set_gradient(self):
-        self.__bias += -sum(self.__gradient_input) / len(self.__gradient_input)
-        self.__gradient_input.clear()
+        self.__bias += -sum(self._gradient_input) / len(self._gradient_input)
+        self._gradient_input.clear()

@@ -24,13 +24,13 @@ class NeuralNetwork:
     def __init__(self, layers, nodes, node_in, node_out):
         self.__node_in = node_in
         self.__layers = [Layer(self.__node_in)]
-        for i in range(0, nodes):
+        for i in range(0, layers):
             self.__layers.append(Layer(nodes))
 
         self.__node_out = node_out
         self.__layers.append(Layer(self.__node_out))
 
-        self.__layerCount = len(layers)
+        self.__layerCount = len(self.__layers)
         self.__input_node = self.__layers[0]
         self.__output_node = self.__layers[-1]
 
@@ -44,6 +44,8 @@ class NeuralNetwork:
 
                     node_a.with_branch_out(branch)
                     node_b.with_branch_in(branch)
+
+        return self
 
     def train(self, batch):
         cost = 0
@@ -87,49 +89,51 @@ class NeuralNetwork:
                     branch = start.get_branch_out(end)
                     weighted += start.get_state() * branch.get_weight()
 
-                end.set_state(sigmoid(weighted + end.get__bias()), weighted + end.get__bias())
+                end.set_state(sigmoid(weighted + end.get_bias()), weighted + end.get_bias())
 
     def __back_propagate(self, expected):
         state_gradients_prev = { }
 
         i = 0
         for node in self.__output_node:
-            state_gradients_prev[node] = 2 * (node.get_state() - expected[i])
+            state_gradients_prev[node] = (2 * (node.get_state() - expected[i]))
             bias_gradient = state_gradients_prev[node] * sigmoid_derivative(node.get_raw_state())
             node.push_gradient(bias_gradient)
 
             for branch in node:
-                branch.push_gradient(branch.get_weight * bias_gradient)
+                branch.push_gradient(bias_gradient * branch.get_node_a().get_state())
 
             i += 1
 
-        for i in range(self.__layerCount - 2, 0, -1):
+        for i in range(self.__layerCount - 2, -1, -1):
+            gradients = { }
             layer = self.__layers[i]
+
             for node in layer:
                 state_gradient = 0
-                for branch in node:
-                    state_gradient += branch.get_weight() * sigmoid_derivative(branch.get_node_b().get_raw_state()) *  state_gradients_prev[branch.get_node_b()]
+                for end in self.__layers[i + 1]:
+                    branch = node.get_branch_out(end)
+                    state_gradient += branch.get_weight() * sigmoid_derivative(node.get_raw_state()) * state_gradients_prev[end]
 
-                node.push_gradient(sigmoid_derivative(node.get_raw_state()) * state_gradient)
+                bias_gradient = sigmoid_derivative(node.get_raw_state()) * state_gradient
+                node.push_gradient(bias_gradient)
+
                 for branch in node:
-                    branch.push_gradient(state_gradient * branch.get_node_a().get_state())
+                    branch.push_gradient(bias_gradient * branch.get_node_a().get_state())
+
+                gradients[node] = state_gradient
 
             state_gradients_prev.clear()
-            for node in layer:
-                state_gradient = 0
-                for branch in node:
-                    state_gradient += branch.get_weight() * sigmoid_derivative(branch.get_node_b().get_raw_state()) * state_gradients_prev[branch.get_node_b()]
-
-                state_gradients_prev[node] = state_gradient
+            state_gradients_prev.update(gradients)
 
     def __back_propagate_push(self):
         for i in range(0, self.__layerCount - 1):
             layer = self.__layers[i]
             for node in layer:
-                node.push_gradient()
+                node.set_gradient()
                 for branch in node:
-                    branch.push_gradient()
+                    branch.set_gradient()
 
         for node in self.__output_node:
-            node.push_gradient()
+            node.set_gradient()
 

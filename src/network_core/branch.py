@@ -4,6 +4,8 @@ from src.network_utilities.gradient_value import GradientValue
 
 class Branch(GradientValue):
     def __init__(self, node_a, node_b):
+        super().__init__()
+
         self.__node_a = node_a
         self.__node_b = node_b
 
@@ -22,7 +24,7 @@ class Branch(GradientValue):
         return self.__weight
 
     def set_gradient(self):
-        self.__weight += -sum(self.__gradient_input) / len(self.__gradient_input)
-        self.__gradient_input.clear()
+        self.__weight += -sum(self._gradient_input) / len(self._gradient_input)
+        self._gradient_input.clear()
 
 

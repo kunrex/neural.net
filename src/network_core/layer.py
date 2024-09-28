@@ -1,4 +1,4 @@
-from node import Node
+from src.network_core.node import Node
 from src.network_utilities.iterator import Iterator
 
 class Layer:
@@ -23,6 +23,6 @@ class Layer:
 
     def set_node(self, index, value):
         if 0 <= index < self.__node_count:
-            return self.__nodes[value].set_state(value)
+            return self.__nodes[index].set_state(value, value)
 
         return False
