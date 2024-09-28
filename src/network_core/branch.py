@@ -9,7 +9,7 @@ class Branch(GradientValue):
         self.__node_a = node_a
         self.__node_b = node_b
 
-        self.__weight = random.randint(-4, 4)
+        self.__weight = random.uniform(-4, 4)
 
     def get_node_a(self):
         return self.__node_a
